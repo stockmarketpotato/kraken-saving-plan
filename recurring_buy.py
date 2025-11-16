@@ -1,5 +1,4 @@
 import sys
-import base64
 import krakenex
 import time
 import os
@@ -37,7 +36,7 @@ class KrankenApiWrap(object):
             last = Decimal(response['result'][pair][PriceType.LAST.value][0])
             return {'ask' : ask, 'bid' : bid, 'last' : last}
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"get_price: Error: {e}")
             sys.exit(1)
 
     @staticmethod
@@ -46,7 +45,7 @@ class KrankenApiWrap(object):
         try:
             response = kraken.query_private('Balance')
             if response['error']:
-                raise Exception(f"{response['error']}")
+                raise Exception(f"get_balance: {response['error']}")
             return Decimal(response['result'].get(coin, 0.0))
         except Exception as e:
             print(f"Error: {e}")
@@ -65,7 +64,7 @@ class KrankenApiWrap(object):
             }
             response = kraken.query_private('AddOrder', order_details)
             if response['error']:
-                raise Exception(f"{response['error']}")
+                raise Exception(f"place_limit_order: {response['error']} order_details: {order_details}")
             if verbose:
                 print(f"          Success: {response['result']}")
             return response['result']
@@ -84,7 +83,7 @@ class KrankenApiWrap(object):
             if response['error']:
                 raise Exception(f"{response['error']}")
             if verbose:
-                print(f"Order Info for {txid}: {response['result']}")
+                print(f"get_order_info: Order Info for {txid}: {response['result']} order_info: {order_info}")
             return response['result']
         except Exception as e:
             print(f"Error: {e}")
@@ -99,7 +98,7 @@ class KrankenApiWrap(object):
             }
             response = kraken.query_private('CancelOrder', order_info)
             if response['error']:
-                raise Exception(f"{response['error']}")
+                raise Exception(f"cancel_order: {response['error']} order_info: {order_info}")
             if verbose:
                 print(f"          Cancel Order {txid}: {response['result']}")
             return response['result']
@@ -116,9 +115,9 @@ class KrankenApiWrap(object):
             }
             response = kraken.query_public('AssetPairs', query)
             if response['error']:
-                raise Exception(f"{response['error']}")
+                raise Exception(f"get_asset_pair_details: {response['error']} {query}")
             if pair not in response['result']:
-                raise Exception(f"Pair {pair} not found in asset pairs.")
+                raise Exception(f"get_asset_pair_details: Pair {pair} not found in asset pairs. query: {query}")
             return response['result'][pair]
         except Exception as e:
             print(f"Error: {e}")
@@ -133,7 +132,7 @@ class KrankenApiWrap(object):
             }
             response = kraken.query_private('Earn/Strategies', stake_details)
             if response['error']:
-                raise Exception(f"{response['error']}")
+                raise Exception(f"earn_strategies: {response['error']} stake_details: {stake_details}")
             return response['result']
         except Exception as e:
             print(f"Info: {coin}")
@@ -150,7 +149,7 @@ class KrankenApiWrap(object):
             }
             response = kraken.query_private('Earn/Allocate', stake_details)
             if response['error']:
-                raise Exception(f"{response['error']}")
+                raise Exception(f"earn_allocate: {response['error']} stake_details: {stake_details}")
             print(f"          Success: {response['result']}")
             return response['result']
         except Exception as e:
@@ -164,7 +163,6 @@ class BuyOnce:
         pair_details = KrankenApiWrap.get_asset_pair_details(pair)
 
         base = pair_details['base']
-        quote = pair_details['quote']
         precision = pair_details["pair_decimals"]
         wsname = pair_details["wsname"]
         
@@ -177,7 +175,6 @@ class BuyOnce:
         price = self._get_price(pair, base2, quote2)
         limit_price = self._get_limit_price(price, precision, quote2)
         volume = self._get_volume(fiat_to_spend, limit_price, base2)
-        quote_balance = self._get_quote_balance(quote, quote2, fiat_to_spend)
 
         txid = self._place_limit_order(pair, volume, limit_price)
         time.sleep(5)
@@ -226,7 +223,6 @@ class BuyOnce:
         return quote_balance
 
     def _place_limit_order(self, pair, volume, limit_price):
-        # Place limit order
         print("> Place limit order...")
         result = KrankenApiWrap.place_limit_order(pair, volume, limit_price, True)
         txid = result['txid'][0]
@@ -234,12 +230,15 @@ class BuyOnce:
 
     def _get_strategy_id(self, base):
         strategies = KrankenApiWrap.earn_strategies(base)
-        strategy_id = strategies['items'][0]['id']
-        return strategy_id
+        strategies = [x for x in strategies['items'] if x['can_allocate']]
+        return strategies[0]['id'] if len(strategies) > 0 else None
 
     def _earn_allocate(self, base, strategy_id):
         print(f"> Earn/Allocate {base} ...")
         print(f"          Balance available for staking: ", end='')
+        if strategy_id is None:
+            print(f"          Error: No valid strategy found. Exit without earn allocation.")
+            return
         base_balance = KrankenApiWrap.get_balance(base)
         print(f"{base_balance} {base}")
         if base_balance > 0.0:
