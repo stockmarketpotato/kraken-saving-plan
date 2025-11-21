@@ -288,9 +288,6 @@ class BuyOnce:
         print(f"          Fee:        {fee}")
         print(f"          Total:      {float(fee) + float(cost)}")
 
-# python recurring_buy.py --pair XXBTZEUR --fiat_to_spend 70
-# python recurring_buy.py --pair XETHZEUR --fiat_to_spend 30
-
 def main():
     parser = argparse.ArgumentParser(description="Buy and stake a coin on Kraken.")
     parser.add_argument("--pair", type=str, required=True, help="Trading pair, e.g., XXBTZEUR for BTC/EUR or XETHZEUR for ETH/EUR")

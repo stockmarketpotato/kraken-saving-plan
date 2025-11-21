@@ -1,2 +1,2 @@
-0 20 1 * * python3 /app/recurring_buy.py --pair XXBTZEUR --fiat_to_spend 100 >>/tmp/out.log 2>/tmp/err.log
-1 20 1 * * python3 /app/recurring_buy.py --pair XETHZEUR --fiat_to_spend 100 >>/tmp/out.log 2>/tmp/err.log
+0 20 1 * * python3 /app/buy_once.py --pair XXBTZEUR --fiat_to_spend 100 >>/tmp/out.log 2>/tmp/err.log
+1 20 1 * * python3 /app/buy_once.py --pair XETHZEUR --fiat_to_spend 100 >>/tmp/out.log 2>/tmp/err.log
