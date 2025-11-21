@@ -23,7 +23,7 @@ class PriceType(Enum):
 
 TIMEOUT_IN_SECONDS = 60 * 5
 
-class KrankenApiWrap(object):
+class KrakenApiWrap(object):
     @staticmethod
     def get_price(pair : str) -> float:
         """Get the current price for a pair."""
@@ -160,7 +160,7 @@ class KrankenApiWrap(object):
 
 class BuyOnce:
     def __init__(self, pair, fiat_to_spend):
-        pair_details = KrankenApiWrap.get_asset_pair_details(pair)
+        pair_details = KrakenApiWrap.get_asset_pair_details(pair)
 
         base = pair_details['base']
         precision = pair_details["pair_decimals"]
@@ -192,7 +192,7 @@ class BuyOnce:
 
     def _get_price(self, pair, base2, quote2):
         print(f"> Fetching current {base2} price:")
-        price = KrankenApiWrap.get_price(pair)
+        price = KrakenApiWrap.get_price(pair)
         print(f"    Ask:  {price['ask']} {quote2}")
         print(f"    Bid:  {price['bid']} {quote2}")
         print(f"    Last: {price['last']} {quote2}")
@@ -215,7 +215,7 @@ class BuyOnce:
     def _get_quote_balance(self, quote, quote2, fiat_to_spend):
         # Check EUR balance
         print(f"> Available {quote2} balance:")
-        quote_balance = KrankenApiWrap.get_balance(quote)
+        quote_balance = KrakenApiWrap.get_balance(quote)
         print(f"          {quote_balance:.2f} {quote2}")
         if quote_balance < fiat_to_spend:
             print("Error: Insufficient balance to complete the purchase.")
@@ -224,12 +224,12 @@ class BuyOnce:
 
     def _place_limit_order(self, pair, volume, limit_price):
         print("> Place limit order...")
-        result = KrankenApiWrap.place_limit_order(pair, volume, limit_price, True)
+        result = KrakenApiWrap.place_limit_order(pair, volume, limit_price, True)
         txid = result['txid'][0]
         return txid
 
     def _get_strategy_id(self, base):
-        strategies = KrankenApiWrap.earn_strategies(base)
+        strategies = KrakenApiWrap.earn_strategies(base)
         strategies = [x for x in strategies['items'] if x['can_allocate']]
         return strategies[0]['id'] if len(strategies) > 0 else None
 
@@ -239,10 +239,10 @@ class BuyOnce:
         if strategy_id is None:
             print(f"          Error: No valid strategy found. Exit without earn allocation.")
             return
-        base_balance = KrankenApiWrap.get_balance(base)
+        base_balance = KrakenApiWrap.get_balance(base)
         print(f"{base_balance} {base}")
         if base_balance > 0.0:
-            KrankenApiWrap.earn_allocate(base_balance, strategy_id)
+            KrakenApiWrap.earn_allocate(base_balance, strategy_id)
         else:
             print(f"          Balance insufficient.")
 
@@ -251,7 +251,7 @@ class BuyOnce:
         timeout = time.time() + timeout_seconds
         closed_cancelled_expired = True
         while True:
-            result = KrankenApiWrap.get_order_info(txid)
+            result = KrakenApiWrap.get_order_info(txid)
             if not txid in result:
                 return False
             if result[txid]["status"] in ["closed", "canceled", "expired"]:
@@ -265,7 +265,7 @@ class BuyOnce:
 
     def _cancel_order(self, txid):
         print(f"> Cancel order {txid} ...")
-        result = KrankenApiWrap.cancel_order(txid, True)
+        result = KrakenApiWrap.cancel_order(txid, True)
         if result['count'] == 1:
             print(f"          successful")
         else:
@@ -273,7 +273,7 @@ class BuyOnce:
         return result
 
     def _order_exec_status(self, txid):
-        result = KrankenApiWrap.get_order_info(txid)
+        result = KrakenApiWrap.get_order_info(txid)
         cost = result[txid]["cost"]
         fee = result[txid]["fee"]
         vol_exec = result[txid]["vol_exec"]
