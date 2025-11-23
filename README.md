@@ -6,7 +6,7 @@
 
 This project provides a simple, containerized tool to execute a saving plan on the [Kraken](https://www.kraken.com/) cryptocurrency exchange via their API.
 
-Blog post: [Low-Cost Automated Dollar-Cost Averaging on Kraken](https://www.stockmarketpotato.com/?p=29)
+Blog post: [Low-Cost Automated Dollar-Cost Averaging on Kraken](https://www.stockmarketpotato.com/low-cost-automated-dollar-cost-averaging-on-kraken/)
 
 **Why use this instead of Kraken's "Recurring Buy"?**
 Kraken's native recurring buy feature is convenient, but it often comes with higher fees and spread. This tool places **Limit Orders** directly via the API, significantly reducing costs over time.
